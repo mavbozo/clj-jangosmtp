@@ -11,3 +11,8 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
+
+
+(def cnf {:Password "" :Username "avicenna"})
+
+(def t {:Password "", :Username "avicenna", :Since ""})

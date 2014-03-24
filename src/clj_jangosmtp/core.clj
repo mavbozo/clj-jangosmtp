@@ -1,28 +1,35 @@
 (ns clj-jangosmtp.core
-  (:require [clj-http.client :as client]))
+  (:require [clj-http.client :as client]
+            [clojure.data.xml :refer [parse-str]]))
 
 
-(def cnf {:Password "" :Username "avicenna"})
+(declare success? jangosmtp-request)
 
-(def t {:Password "", :Username "avicenna", :Since ""})
 
-(defn get-bounce-list-all [cnf]
-  (client/post "https://api.jangomail.com/api.asmx/GetBounceListAll" {:form-params (assoc cnf :Since "")}))
+(defn check-bounce [cnf e]
+  (let [d (assoc cnf :EmailAddress e)]
+    (jangosmtp-request
+     (client/post "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params d})
+     #(success? %)
+     (fn [s] s))))
 
-(def r (get-bounce-list-all cnf))
 
-(def b (:body r))
+(defn get-bounce-list-all 
+  ([cnf] (get-bounce-list-all cnf ""))
+  ([cnf since]
+     (jangosmtp-request
+      (client/post "https://api.jangomail.com/api.asmx/GetBounceListAll" {:form-params (assoc cnf :Since since)})
+      (fn [s]
+        (if (success? s)
+          (-> (clojure.string/split s #"\n")
+              (subvec 2))
+          []))
+      (fn [s] s))))
+             
 
 (defn success? [s]
-  (re-find #"^0\nSUCCESS" s))
+  (= (re-find #"^0\nSUCCESS" s) "0\nSUCCESS" ))
 
-
-(def result-str (-> (re-find #"<string xmlns=\"http\:\/\/api\.jangomail\.com/\">(?s)(.*)</string>" b)
-                    (nth 1)))
-
-(def result (-> result-str
-                (clojure.string/split #"\n")
-                (subvec 2)))
 
 
 (defn delete-bounce [cnf e]
@@ -31,12 +38,6 @@
 
 (dorun (map #(delete-bounce cnf %) result))
 
-(defn check-bounce [cnf e]
-  (let [d (assoc cnf :EmailAddress e)
-        r (client/post "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params d})
-        b (:body r)]
-    (-> (re-find #"<string xmlns=\"http\:\/\/api\.jangomail\.com/\">(?s)(.*)</string>" b)
-        (nth 1))))
 
 
 (defn bounce? [cnf e]
@@ -50,6 +51,7 @@
          :MessageHTML ""
          :Options ""})
 
+
 (defn send-transactional-email [cnf te]
   (let [d (merge te cnf)]
     (client/post "https://api.jangomail.com/api.asmx/SendTransactionalEmail" {:form-params d})))
@@ -58,3 +60,18 @@
   (fn [] 
     (send-transactional-email cnf m)))
           
+
+
+(defmacro jangosmtp-request [req-fn succ-fn ex-fn]
+  `(try
+     (~succ-fn (-> ~req-fn
+                   :body
+                   parse-str
+                   :content
+                   first))
+     (catch Exception ~'e
+       (-> ~'e
+           ex-data
+           :object
+           :body
+           (~ex-fn)))))
