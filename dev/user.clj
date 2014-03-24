@@ -10,7 +10,9 @@
    [clojure.set :as set]
    [clojure.string :as str]
    [clojure.test :as test]
-   [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
+   [clojure.tools.namespace.repl :refer (refresh refresh-all)]
+   [clj-jangosmtp.core :as core]
+   [clj-jangosmtp.core-test :as core-test]))
 
 
 (def cnf {:Password "" :Username "avicenna"})
