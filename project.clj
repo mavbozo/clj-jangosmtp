@@ -12,6 +12,7 @@
                                   [org.clojure/test.check "0.5.7"]
                                   [org.clojure/tools.trace "0.7.8"]]
                    :source-paths ["dev"]}}
-  :repl-options {:init-ns user})
+  :repl-options {:init-ns user}
+  :aot :all)
 
 

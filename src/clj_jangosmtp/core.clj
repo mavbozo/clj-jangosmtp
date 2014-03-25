@@ -15,6 +15,19 @@
     `(prn (zipmap '~ks [~@ks]))))
 
 
+(defn- success? [s]
+  (= (re-find #"^0\nSUCCESS" s) "0\nSUCCESS" ))
+
+
+(declare jangosmtp-request-0 macro0 my-macro)
+
+(defn ^:dynamic check-bounce [cnf e]
+  (jangosmtp-request-0
+     (post "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params (assoc cnf :EmailAddress e)})))
+
+
+
+
 (defn http-response-mock 
   ([]
      {:body
@@ -27,6 +40,18 @@
      (http-response-mock)))
 
 
+(defmacro jangosmtp-request-0 [req-fn]
+  `(try
+     (success? (-> ~req-fn
+                   :body
+                   parse-str
+                   :content
+                   first))
+     (catch Exception ~'e
+       (raise {:jangosmtp-exception true 
+               :data (-> ~'e
+                         ex-data
+                         :object)}))))
 
 
 
@@ -34,16 +59,26 @@
 
 
 (comment
-(defn ^:dynamic check-bounce [cnf e]
-  (let [d (assoc cnf :EmailAddress e)]
-    (post "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params d}))))
-
 
 (defn ^:dynamic check-bounce [cnf e]
   (let [d (assoc cnf :EmailAddress e)]
-    (jangosmtp-request
-     (post "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params d})
-     #(success? %))))
+    (try
+      (success? (-> (post "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params d})
+                    :body
+                    parse-str
+                    :content
+                    first))
+      (catch Exception e
+        (raise {:jangosmtp-exception true 
+                :data (-> e
+                          ex-data
+                          :object)})))))
+
+) ;; comment
+
+
+     
+
 
 
 (defn get-bounce-list-all 
@@ -98,11 +133,40 @@
                          :object)}))))
 
 
-(defn- success? [s]
-  (= (re-find #"^0\nSUCCESS" s) "0\nSUCCESS" ))
+
+(defn check-bounce-1 [cnf e]
+  (macro0
+   (my-plus cnf e)))
+
+
+(comment 
+(with-redefs [my-plus my-plus-but-minus]
+  (check-bounce-1 1 2))
+
+(clojure.core/with-redefs-fn {(var my-plus) my-plus-but-minus} (fn* ([] (check-bounce-1 1 2))))
+
+)
 
 
 
 (defn ^:dynamic foo []
   (with-redefs [post http-response-mock]
-    (check-bounce {} "")))
+    (check-bounce {} ""))
+
+
+)
+
+(comment 
+(clojure.core/with-redefs-fn 
+  {(var post) http-response-mock} 
+  (fn* ([] (check-bounce {} ""))))
+)
+
+(comment
+(clojure.core/with-redefs-fn {(var post) http-response-mock} (fn* ([] (check-bounce {} ""))))
+
+)
+
+
+
+
