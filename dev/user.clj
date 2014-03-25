@@ -12,29 +12,8 @@
    [clojure.test :as test]
    [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
 
-(def cnf {:Password "" :Username "avicenna"})
 
-(def t {:Password "", :Username "avicenna", :Since ""})
-
-
-(declare my-macro)
+(def cnf {:Password "" :Username ""})
 
 
-(defn my-plus [x y]
-  (+ x y))
 
-(defn my-plus-but-minus [x y]
-  (- x y))
-
-
-(defn my-plus-in-macro [x y]
-  (my-macro (my-plus x y)))
-
-(defmacro my-macro [my-fn]
-  `~my-fn)
-
-
-(comment 
-  (with-redefs [my-plus my-plus-but-minus]
-    (my-plus-in-macro 1 2))
-)
