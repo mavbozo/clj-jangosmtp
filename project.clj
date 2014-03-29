@@ -1,4 +1,4 @@
-(defproject clj-jangosmtp "0.1.0"
+(defproject org.clojars.mavbozo/clj-jangosmtp "0.1.0"
   :description "JangoSMTP clojure library"
   :url "https://github.com/mavbozo/clj-jangosmtp"
   :license {:name "Eclipse Public License"
