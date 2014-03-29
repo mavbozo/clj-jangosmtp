@@ -9,7 +9,7 @@
             [clojure.tools.trace]))
 
 
-(declare success? transactional-email-template)
+(declare success? jangosmtp-request transactional-email-template)
 
 
 (defprotocol HttpClient
@@ -24,70 +24,46 @@
                                 merge
                                 {:Username username
                                  :Password password}))))
-                      
 
 
 (defn jangosmtp-api [username password]
   (->JangoSmtpApi username password))
 
 
-(defmacro jangosmtp-request [req-fn succ-fn]
-  `(try
-     (~succ-fn (-> ~req-fn
-                   :body
-                   parse-str
-                   :content
-                   first))
-     (catch Exception ~'e
-       (raise {:jangosmtp-exception true 
-               :data (-> ~'e
-                         ex-data
-                         :object)}))))
-
-
 (defn check-bounce [j e]
   (jangosmtp-request
-   (post j "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params {:EmailAddress e}})
-   #(success? %)))
+   {:req-fn #(post j "https://api.jangomail.com/api.asmx/CheckBounce" {:form-params {:EmailAddress e}})
+    :succ-fn success?}))
 
 
-(defn- success? [s]
-  (= (re-find #"^0\nSUCCESS" s) "0\nSUCCESS" ))
-
-
-
-
-(defn delete-bounce [cnf e]
-  (let [d (assoc cnf :EmailAddress e)]
-    (jangosmtp-request
-     (client/post "https://api.jangomail.com/api.asmx/DeleteBounce" {:form-params d})
-     #(success? %))))
+(defn delete-bounce [j e]
+  (jangosmtp-request
+   {:req-fn #(post j "https://api.jangomail.com/api.asmx/DeleteBounce" {:form-params {:EmailAddress e}})
+    :succ-fn success?}))
 
 
 (defn get-bounce-list-all 
-  ([cnf] (get-bounce-list-all cnf ""))
-  ([cnf since]
+  ([j] (get-bounce-list-all j ""))
+  ([j since]
      (jangosmtp-request
-      (client/post "https://api.jangomail.com/api.asmx/GetBounceListAll" {:form-params (assoc cnf :Since since)})
-      (fn [s]
-        (if (success? s)
-          (-> (clojure.string/split s #"\n")
-              (subvec 2))
-          [])))))
+      {:req-fn #(post j "https://api.jangomail.com/api.asmx/GetBounceListAll" {:form-params {:Since since}})
+       :succ-fn (fn [s]
+                  (if (success? s)
+                    (-> (clojure.string/split s #"\n")
+                        (subvec 2))
+                    []))})))
 
 
+(defn send-transactional-email [j te]
+  (jangosmtp-request
+   {:req-fn #(post j "https://api.jangomail.com/api.asmx/SendTransactionalEmail" {:form-params te})
+    :succ-fn (fn [s]
+                 (if (success? s)
+                   (-> (clojure.string/split s #"\n")
+                       (subvec 2)
+                       first)
+                   nil))}))
 
-(defn send-transactional-email [cnf te]
-  (let [d (merge transactional-email-template cnf)]
-    (jangosmtp-request
-     (client/post "https://api.jangomail.com/api.asmx/SendTransactionalEmail" {:form-params d})
-      (fn [s]
-        (if (success? s)
-          (-> (clojure.string/split s #"\n")
-              (subvec 2)
-              first)
-          nil)))))
-  
 
 (def ^:private transactional-email-template 
   {:FromEmail ""
@@ -98,3 +74,20 @@
    :MessageHTML ""
    :Options ""})
 
+
+(defn- success? [s]
+  (= (re-find #"^0\nSUCCESS" s) "0\nSUCCESS" ))
+
+
+(defn jangosmtp-request [{:keys [req-fn succ-fn]}]
+  (try
+    (succ-fn (->  (req-fn)
+                   :body
+                   parse-str
+                   :content
+                   first))
+    (catch Exception e
+      (raise {:jangosmtp-exception true 
+              :data (-> e
+                        ex-data
+                        :object)}))))

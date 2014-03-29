@@ -12,9 +12,31 @@
    [clojure.test :as test]
    [clojure.tools.namespace.repl :refer (refresh refresh-all)]
    [clj-jangosmtp.core :refer [check-bounce jangosmtp-api]]))
+   
 
 
-(def cnf {:Password "" :Username ""})
+(defn tests []
+  (test/run-tests 'clj-jangosmtp.core-test))
+  
+
+(defn reset []
+  (refresh :after 'user/tests))
 
 
 
+
+(comment 
+  (fn []
+
+    (defun cider-repl-reset ()
+      (interactive)
+      (save-some-buffers)
+      (with-current-buffer (cider-current-repl-buffer)
+        (goto-char (point-max))
+        (insert "(user/reset)")
+        (cider-repl-return)))
+
+    (global-set-key (kbd "C-c r") 'cider-repl-reset)
+
+    )
+)
