@@ -1,5 +1,5 @@
-(defproject clj-jangosmtp "0.1.0-SNAPSHOT"
-  :description "jangoSMTP clojure library"
+(defproject clj-jangosmtp "0.1.0"
+  :description "JangoSMTP clojure library"
   :url "https://github.com/mavbozo/clj-jangosmtp"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
