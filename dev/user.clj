@@ -23,11 +23,9 @@
   (refresh :after 'user/tests))
 
 
-
-
 (comment 
   (fn []
-
+;; handy keystroke for emacs user
     (defun cider-repl-reset ()
       (interactive)
       (save-some-buffers)
