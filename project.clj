@@ -1,4 +1,4 @@
-(defproject clj-jangosmtp "0.1.1"
+(defproject clj-jangosmtp "0.1.2"
   :description "JangoSMTP clojure library"
   :url "https://github.com/mavbozo/clj-jangosmtp"
   :license {:name "Eclipse Public License"
@@ -7,6 +7,7 @@
                  [clj-http "0.9.1"]
                  [org.clojure/data.xml "0.0.7"]
                  [im.chit/ribol "0.4.0"]]
+  :deploy-repositories [["clojars" {:creds :gpg}]]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]
                                   [org.clojure/test.generative "0.5.0"]
                                   [org.clojure/test.check "0.5.7"]

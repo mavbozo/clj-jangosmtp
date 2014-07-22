@@ -5,8 +5,8 @@
 (ns clj-jangosmtp.core
   (:require [clj-http.client :as client]
             [clojure.data.xml :refer [parse-str]]
-            [ribol.core :refer [manage on raise]]
-            [clojure.tools.trace]))
+            [ribol.core :refer [manage on raise]]))
+            
 
 
 (declare success? jangosmtp-request convert-send-transactional-email-data)

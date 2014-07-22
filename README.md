@@ -7,7 +7,7 @@ http based API for JangoSMTP API.
 leinigen project.clj
 
 ```
-[clj-jangosmtp "0.1.0"]
+[clj-jangosmtp "0.1.2"]
 ```
 
 Sample Code:
