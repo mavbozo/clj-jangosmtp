@@ -80,7 +80,7 @@
   (let [default {:message-html ""
                  :message-plain ""
                  :options ""}
-        ed (merge email-data default)
+        ed (merge default email-data)
         {:keys [from-email from-name to-email-address subject message-plain message-html options]} ed]
     {:FromEmail from-email
      :FromName from-name
